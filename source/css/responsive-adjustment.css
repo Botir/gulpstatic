@@ -1,0 +1,15 @@
+@charset "utf-8";
+/* CSS Document */
+
+@media (min-width: 481px) {
+}
+@media (min-width: 361px) {
+}
+@media (min-width: 601px) {
+.post-details .post-body {float: left;width: 100%;}
+.similar-news {float: left;width: 100%;}
+.similar-news .post-title {font-size: 14px;line-height: inherit;font-weight: 500;text-align: center;}
+.similar-news .post-body {width: 100%;}
+.fs-13_fs-15 {font-size: 13px !important;}
+.fs-14_fs-15 {font-size: 14px !important;}
+}
