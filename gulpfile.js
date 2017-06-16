@@ -1,43 +1,28 @@
 'use strict';
  
-var gulp          = require('gulp'),
-	autoprefixer  = require('gulp-autoprefixer'),
-	imagemin      = require('gulp-imagemin'),
-	uglify        = require('gulp-uglify'),
-	clean         = require('gulp-clean'),
-	browserSync   = require('browser-sync'),
-	concat 		  = require('gulp-concat'),
-    csso = require('gulp-csso'), // Минификация CSS
-	reload        = browserSync.reload;
-
-var p = require('gulp-load-plugins')({ // This loads all the other plugins.
-  DEBUG: false,
-  pattern: ['gulp-*', 'gulp.*', 'del', 'run-*', 'browser*', 'vinyl-*'],
-  rename: {
-    'vinyl-source-stream': 'source',
-    'vinyl-buffer': 'buffer',
-    'gulp-util': 'gutil'
-  },
-}),
-
-
-autoprefixerOpts = {
-    browsers: ['last 3 versions', '> 5%']
-  },
+var gulp          	= require('gulp'),
+	rename  	  	= require('gulp-rename'),
+	header        	= require('gulp-header'),
+	postcss       	= require('gulp-postcss'),
+	postcssImport 	= require('postcss-import'),
+	postcssCssnext 	= require('postcss-cssnext'),
+	cssnano 		= require('cssnano'),
+	concat 		  	= require('gulp-concat'),
+	uglify        	= require('gulp-uglify'),
+	size        	= require('gulp-size'),
 
 src  = 'source/', // The Middleman source folder
 dest = 'assets/';   // The "hot" build folder used by Middleman's external pipeline;
 
 // Пути
-var path = {
-	app : {          // Исходники	
-			css    : src + 'css/**/*.{css,scss,sass}',	
-		},
-	dist : {         // Релиз		
-		css    : src+dest + 'css/'		
+var path = {	
+	scripts: {
+		src: src + 'js/**/*.js',
+		dest: dest + 'js/'
 	},
-	watch : {        // Наблюдение
-		css    : src + 'css/**/*.{css,scss,sass}',
+	styles: {
+		src: src + 'css/theme-style.css',	
+		dest: dest + 'css/'
 	},
 	clean      : src+dest // Чистка
 };
@@ -51,14 +36,33 @@ var config = {
 	port : 9000,
 	tunel : true
 };
+// JS Preprocessing
+//gulp.src(['app/js/app.js', 'app/js/**/*.js']),
+gulp.task('scripts', function(){
+	gulp.src(path.scripts.src)		
+		.pipe(concat('app.js'))
+		.pipe(uglify())
+		.pipe(size())
+		.pipe(gulp.dest(path.scripts.dest));
+		
+});
+
 
 // CSS Preprocessing
 gulp.task('css', function() {
-  return gulp.src(path.app.css)   
-    .pipe(p.autoprefixer(autoprefixerOpts)).on('error', handleError)    
-    .pipe(csso()) // минимизируем css 
-    .pipe(concat('app.min.css'))
-    .pipe(gulp.dest(path.dist.css));
+  return gulp.src(path.styles.src)   
+    .pipe(postcss([
+      postcssImport(),
+      postcssCssnext(),
+    ]))   
+    .pipe(gulp.dest(path.styles.dest))
+    .pipe(rename({ extname: '.min.css' }))
+    .pipe(postcss([
+      cssnano({
+        autoprefixer: false,
+      })
+    ]))
+   .pipe(gulp.dest(path.styles.dest))
     
 });
 
@@ -74,7 +78,7 @@ gulp.task('clean', function(cb){
 });
 
 // Задачи по-умолчанию
-gulp.task('default', ['css']);
+gulp.task('default', ['scripts','css']);
 
 function handleError(err) {
   console.log(err.toString());
